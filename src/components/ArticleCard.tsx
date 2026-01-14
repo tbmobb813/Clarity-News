@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { formatDate, getBiasLabel, getBiasColor } from '@/lib/utils'
 
@@ -20,11 +21,13 @@ export function ArticleCard({ article }: ArticleCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       {article.urlToImage && (
-        <div className="aspect-video overflow-hidden">
-          <img
+        <div className="aspect-video overflow-hidden relative">
+          <Image
             src={article.urlToImage}
             alt={article.title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         </div>
       )}

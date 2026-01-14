@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
-import Stripe from 'stripe'
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')!
 
-  let event: Stripe.Event
+  let event
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -23,27 +22,29 @@ export async function POST(request: NextRequest) {
   // Handle the event
   switch (event.type) {
     case 'checkout.session.completed': {
-      const session = event.data.object as Stripe.Checkout.Session
+      const session = event.data.object
       const userId = session.metadata?.userId
 
       if (userId && session.subscription) {
-        const subscription = await stripe.subscriptions.retrieve(
+        const subscriptionData: any = await stripe.subscriptions.retrieve(
           session.subscription as string
         )
+
+        const currentPeriodEnd = subscriptionData.current_period_end || Math.floor(Date.now() / 1000)
 
         await prisma.subscription.upsert({
           where: { userId },
           create: {
             userId,
             stripeCustomerId: session.customer as string,
-            stripePriceId: subscription.items.data[0].price.id,
-            stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            status: subscription.status,
+            stripePriceId: subscriptionData.items.data[0].price.id,
+            stripeCurrentPeriodEnd: new Date(currentPeriodEnd * 1000),
+            status: subscriptionData.status,
           },
           update: {
-            stripePriceId: subscription.items.data[0].price.id,
-            stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            status: subscription.status,
+            stripePriceId: subscriptionData.items.data[0].price.id,
+            stripeCurrentPeriodEnd: new Date(currentPeriodEnd * 1000),
+            status: subscriptionData.status,
           },
         })
       }
@@ -51,18 +52,20 @@ export async function POST(request: NextRequest) {
     }
 
     case 'invoice.payment_succeeded': {
-      const invoice = event.data.object as Stripe.Invoice
+      const invoice: any = event.data.object
       if (invoice.subscription) {
-        const subscription = await stripe.subscriptions.retrieve(
+        const subscriptionData: any = await stripe.subscriptions.retrieve(
           invoice.subscription as string
         )
+
+        const currentPeriodEnd = subscriptionData.current_period_end || Math.floor(Date.now() / 1000)
 
         await prisma.subscription.updateMany({
           where: { stripeCustomerId: invoice.customer as string },
           data: {
-            stripePriceId: subscription.items.data[0].price.id,
-            stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            status: subscription.status,
+            stripePriceId: subscriptionData.items.data[0].price.id,
+            stripeCurrentPeriodEnd: new Date(currentPeriodEnd * 1000),
+            status: subscriptionData.status,
           },
         })
       }
@@ -70,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     case 'customer.subscription.deleted': {
-      const subscription = event.data.object as Stripe.Subscription
+      const subscription: any = event.data.object
 
       await prisma.subscription.updateMany({
         where: { stripeCustomerId: subscription.customer as string },

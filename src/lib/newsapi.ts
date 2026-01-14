@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const NEWS_API_KEY = process.env.NEWS_API_KEY!
+const NEWS_API_KEY = process.env.NEWS_API_KEY || 'placeholder-key'
 const NEWS_API_BASE_URL = 'https://newsapi.org/v2'
 
 export interface NewsArticle {
