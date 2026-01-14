@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  subscription  Subscription?
+  savedArticles SavedArticle[]
+  preferences   UserPreference?
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId  String   @unique
+  stripePriceId     String
+  stripeCurrentPeriodEnd DateTime
+  status            String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model UserPreference {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topics    String[] // Array of preferred topics
+  sources   String[] // Array of preferred news sources
+  language  String   @default("en")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Article {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  content       String?
+  url           String   @unique
+  urlToImage    String?
+  publishedAt   DateTime
+  source        String
+  author        String?
+  category      String?
+  summary       String?  // AI-generated summary
+  biasScore     Float?   // Bias detection score (-1 to 1)
+  biasAnalysis  String?  // Detailed bias analysis
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  savedBy       SavedArticle[]
+}
+
+model SavedArticle {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, articleId])
+}
