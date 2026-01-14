@@ -1,11 +1,13 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useUserStore } from '@/store/user'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 export default function SavedPage() {
   const { user } = useUserStore()
+  const router = useRouter()
 
   if (!user) {
     return (
@@ -16,7 +18,7 @@ export default function SavedPage() {
             <CardDescription>Please sign in to view your saved articles</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => window.location.href = '/signin'}>
+            <Button onClick={() => router.push('/signin')}>
               Go to Sign In
             </Button>
           </CardContent>
@@ -33,7 +35,7 @@ export default function SavedPage() {
         <p className="text-muted-foreground mb-4">
           You haven&apos;t saved any articles yet.
         </p>
-        <Button onClick={() => window.location.href = '/'}>
+        <Button onClick={() => router.push('/')}>
           Browse Articles
         </Button>
       </div>

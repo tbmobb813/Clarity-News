@@ -1,11 +1,13 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useUserStore } from '@/store/user'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function ProfilePage() {
   const { user } = useUserStore()
+  const router = useRouter()
 
   if (!user) {
     return (
@@ -16,7 +18,7 @@ export default function ProfilePage() {
             <CardDescription>Please sign in to view your profile</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => window.location.href = '/signin'}>
+            <Button onClick={() => router.push('/signin')}>
               Go to Sign In
             </Button>
           </CardContent>

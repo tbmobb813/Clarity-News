@@ -5,7 +5,7 @@ export interface Article {
   content?: string
   url: string
   urlToImage?: string
-  publishedAt: Date
+  publishedAt: string
   source: string
   author?: string
   category?: string
